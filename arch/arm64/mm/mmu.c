@@ -96,6 +96,9 @@ void mem_text_writeable_spinunlock(unsigned long *flags)
  */
 
 /* this function must be called with mem_text_writeable_lock held */
+
+static pmdval_t prot_sect_kernel;
+
 void mem_text_address_writeable(u64 addr)
 {
 	pgd_t *pgd = pgd_offset_k(addr);
