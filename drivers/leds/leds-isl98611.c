@@ -523,7 +523,7 @@ void isl98611_dropbox_report_recovery(struct isl98611_chip *pchip)
 		size -= len;
 	}
 
-	len = scnprintf(cur, size, "hwrev: %#04x\n", system_rev);
+	len = scnprintf(cur, size, "hwrev: %#04x\n");
 	cur += len;
 	size -= len;
 

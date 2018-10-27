@@ -2591,7 +2591,7 @@ static int qpnp_hap_parse_dt(struct qpnp_hap *hap)
 		return rc;
 	}
 
-	if (strncmp(bi_bootmode(), FACTORY_MODE_STR, BOOTMODE_MAX_LEN)) {
+	if (strncmp(bi_bootmode(), FACTORY_MODE_STR)) {
 
 		hap->context_haptics = of_property_read_bool(spmi->dev.of_node,
 						"qcom,context-haptics");
