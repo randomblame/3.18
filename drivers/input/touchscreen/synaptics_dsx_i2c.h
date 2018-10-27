@@ -13,7 +13,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  */
 
@@ -22,8 +22,13 @@
 
 #define SYNAPTICS_DSX_DRIVER_VERSION "DSX 1.1"
 
+/* define to enable USB charger detection */
+#undef USB_CHARGER_DETECTION
+
 #include <linux/version.h>
 #include <linux/ktime.h>
+#include <linux/semaphore.h>
+#include <linux/pm_qos.h>
 #if defined(USB_CHARGER_DETECTION)
 #include <linux/usb.h>
 #include <linux/power_supply.h>
@@ -61,9 +66,12 @@
 #define SYNAPTICS_RMI4_F12 (0x12)
 #define SYNAPTICS_RMI4_F1A (0x1a)
 #define SYNAPTICS_RMI4_F34 (0x34)
+#define SYNAPTICS_RMI4_F35 (0x35)
+#define SYNAPTICS_RMI4_F38 (0x38)
 #define SYNAPTICS_RMI4_F51 (0x51)
 #define SYNAPTICS_RMI4_F54 (0x54)
 #define SYNAPTICS_RMI4_F55 (0x55)
+#define SYNAPTICS_RMI4_FDB (0xdb)
 
 #define SYNAPTICS_RMI4_PRODUCT_INFO_SIZE 2
 #define SYNAPTICS_RMI4_PRODUCT_ID_SIZE 10
@@ -76,6 +84,7 @@
 #define PACKAGE_ID_OFFSET 17
 #define FW_VERSION_OFFSET 18
 #define F34_PROPERTIES_OFFSET 1
+#define F34_PROPERTIES_OFFSET_V2 0
 
 #define MAX_NUMBER_OF_FINGERS 10
 #define MAX_NUMBER_OF_BUTTONS 4
@@ -92,6 +101,10 @@
 #define MASK_1BIT 0x01
 
 #define MAX_NUMBER_TRACKED_RESUMES 10
+
+#define PRODUCT_INFO_SIZE 2
+#define PRODUCT_ID_SIZE 10
+
 /*
  * struct synaptics_rmi4_resume_info - information about a resume
  * @start: time when resume started
@@ -132,7 +145,10 @@ struct synaptics_rmi4_fn_desc {
 	unsigned char cmd_base_addr;
 	unsigned char ctrl_base_addr;
 	unsigned char data_base_addr;
-	unsigned char intr_src_count;
+	unsigned char intr_src_count:3;
+	unsigned char reserved_1:2;
+	unsigned char fn_version:2;
+	unsigned char reserved_2:1;
 	unsigned char fn_number;
 };
 
@@ -229,19 +245,50 @@ struct synaptics_dsx_func_patch {
 	struct list_head link;
 };
 
+struct synaptics_clip_area {
+	unsigned xul_clip, yul_clip, xbr_clip, ybr_clip;
+	unsigned inversion; /* clip inside (when 1) or ouside otherwise */
+};
+
+enum {
+	SYNA_MOD_AOD,
+	SYNA_MOD_STATS,
+	SYNA_MOD_FOLIO,
+	SYNA_MOD_CHARGER,
+	SYNA_MOD_WAKEUP,
+	SYNA_MOD_FPS,
+	SYNA_MOD_QUERY,	/* run time query; active only */
+	SYNA_MOD_RT,	/* run time patch; active only; always effective */
+	SYNA_MOD_MAX
+};
+
+#define FLAG_FORCE_UPDATE	1
+#define FLAG_WAKEABLE		2
+#define FLAG_POWER_SLEEP	4
+
 struct synaptics_dsx_patch {
 	const char *name;
 	int	cfg_num;
+	unsigned int flags;
+	struct semaphore list_sema;
 	struct list_head cfg_head;
 };
 
-#define ACTIVE_IDX	0
-#define SUSPEND_IDX	1
-#define MAX_NUM_STATES	2
+struct config_modifier {
+	const char *name;
+	int id;
+	bool effective;
+	struct synaptics_dsx_patch *active;
+	struct synaptics_dsx_patch *suspended;
+	struct synaptics_clip_area *clipa;
+	struct list_head link;
+};
 
-struct synaptics_dsx_patchset {
-	int	patch_num;
-	struct synaptics_dsx_patch *patch_data[MAX_NUM_STATES];
+struct synaptics_dsx_modifiers {
+	int	mods_num;
+	struct semaphore list_sema;
+	struct list_head mod_head;
+
 };
 
 struct f34_properties {
@@ -255,6 +302,19 @@ struct f34_properties {
 			unsigned char has_display_config:1;
 			unsigned char has_blob_config:1;
 			unsigned char reserved:1;
+		} __packed;
+		unsigned char data[1];
+	};
+};
+
+struct f34_properties_v2 {
+	union {
+		struct {
+			unsigned char query0_subpkt1_size:3;
+			unsigned char has_config_id:1;
+			unsigned char reserved:1;
+			unsigned char has_thqa:1;
+			unsigned char reserved2:2;
 		} __packed;
 		unsigned char data[1];
 	};
@@ -314,22 +374,6 @@ enum exp_fn {
 	RMI_CTRL_ACCESS_BLK,
 	RMI_LAST,
 };
-
-static inline ssize_t synaptics_rmi4_show_error(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	dev_warn(dev, "%s Attempted to read from write-only attribute %s\n",
-			__func__, attr->attr.name);
-	return -EPERM;
-}
-
-static inline ssize_t synaptics_rmi4_store_error(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	dev_warn(dev, "%s Attempted to write to read-only attribute %s\n",
-			__func__, attr->attr.name);
-	return -EPERM;
-}
 
 static inline void batohs(unsigned short *dest, unsigned char *src)
 {
@@ -397,8 +441,12 @@ struct synaptics_rmi4_func_packet_regs {
 	struct synaptics_rmi4_packet_reg *regs;
 };
 
-struct synaptics_clip_area {
-	unsigned xul_clip, yul_clip, xbr_clip, ybr_clip;
+#define MAX_READ_WRITE_SIZE 8096
+#define MIN_READ_WRITE_BUF_SIZE 256
+
+struct temp_buffer {
+	unsigned char *buf;
+	unsigned short buf_size;
 };
 
 /*
@@ -454,9 +502,6 @@ struct synaptics_rmi4_data {
 #elif defined(CONFIG_FB)
 	struct notifier_block panel_nb;
 #endif
-#ifdef CONFIG_MMI_HALL_NOTIFICATIONS
-	struct notifier_block folio_notif;
-#endif
 	atomic_t panel_off_flag;
 	unsigned char current_page;
 	unsigned char button_0d_enabled;
@@ -483,8 +528,6 @@ struct synaptics_rmi4_data {
 	bool fingers_on_2d;
 	bool input_registered;
 	bool in_bootloader;
-	bool purge_enabled;
-	bool charger_detection;
 	wait_queue_head_t wait;
 	int (*i2c_read)(struct synaptics_rmi4_data *pdata, unsigned short addr,
 			unsigned char *data, unsigned short length);
@@ -493,8 +536,7 @@ struct synaptics_rmi4_data {
 	void (*set_state)(struct synaptics_rmi4_data *rmi4_data, int state);
 	int (*ready_state)(struct synaptics_rmi4_data *rmi4_data, bool standby);
 	int (*irq_enable)(struct synaptics_rmi4_data *rmi4_data, bool enable);
-	int (*reset_device)(struct synaptics_rmi4_data *rmi4_data,
-			unsigned char *f01_cmd_base_addr);
+	int (*reset_device)(struct synaptics_rmi4_data *rmi4_data);
 	int number_resumes;
 	int last_resume;
 	struct synaptics_rmi4_resume_info *resume_info;
@@ -502,24 +544,69 @@ struct synaptics_rmi4_data {
 	int last_irq;
 	struct synaptics_rmi4_irq_info *irq_info;
 
-	bool mode_is_wakeable;
-	bool mode_is_persistent;
-
+	/* features enablers */
+	bool charger_detection_enabled;
+	bool folio_detection_enabled;
+	bool fps_detection_enabled;
+	bool wakeup_detection_enabled;
 	bool patching_enabled;
-	struct synaptics_dsx_patchset *default_mode;
-	struct synaptics_dsx_patchset *alternate_mode;
-	struct synaptics_dsx_patchset *current_mode;
+	bool purge_enabled;
+
+	bool suspend_is_wakeable;
+	bool clipping_on;
+	struct synaptics_clip_area *clipa;
+	struct synaptics_dsx_modifiers modifiers;
 
 	struct work_struct resume_work;
-
 	struct synaptics_rmi4_func_packet_regs *f12_data_registers_ptr;
 	struct notifier_block rmi_reboot;
 #if defined(USB_CHARGER_DETECTION)
 	struct power_supply psy;
 #endif
-	bool clipping_on;
-	struct synaptics_clip_area *clipa;
+#ifdef CONFIG_MMI_HALL_NOTIFICATIONS
+	struct notifier_block folio_notif;
+#endif
+	bool is_fps_registered;	/* FPS notif registration might be delayed */
+	struct notifier_block fps_notif;
+
+	struct mutex rmi4_exp_init_mutex;
+	uint32_t pm_qos_latency;
+	struct pm_qos_request pm_qos_irq;
+
+	bool touch_data_contiguous;
+	uint8_t *touch_data;
+	uint16_t touch_data_size;
+
+	struct temp_buffer write_buf;
+
+#if defined(CONFIG_DYNAMIC_DEBUG) || defined(DEBUG)
+	/* TEST OPTIONS */
+	int test_irq_delay_ms;
+	int test_irq_data_contig;
+#endif
 };
+
+static inline ssize_t synaptics_rmi4_show_error(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct synaptics_rmi4_data *rmi4_data = dev_get_drvdata(dev);
+
+	dev_warn(&rmi4_data->i2c_client->dev,
+			"%s Attempted to read from write-only attribute %s\n",
+			__func__, attr->attr.name);
+	return -EPERM;
+}
+
+static inline ssize_t synaptics_rmi4_store_error(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct synaptics_rmi4_data *rmi4_data = dev_get_drvdata(dev);
+
+	dev_warn(&rmi4_data->i2c_client->dev,
+			"%s Attempted to write to read-only attribute %s\n",
+			__func__, attr->attr.name);
+	return -EPERM;
+}
 
 struct time_keeping {
 	int id;
@@ -584,6 +671,46 @@ int synaptics_rmi4_read_packet_reg(
 int synaptics_rmi4_read_packet_regs(
 	struct synaptics_rmi4_data *rmi4_data,
 	struct synaptics_rmi4_func_packet_regs *regs);
+
+int alloc_buffer(struct temp_buffer *tb, size_t count);
+
+static inline int secure_memcpy(unsigned char *dest, unsigned int dest_size,
+		const unsigned char *src, unsigned int src_size,
+		unsigned int count)
+{
+	if (dest == NULL || src == NULL)
+		return -EINVAL;
+
+	if (count > dest_size || count > src_size)
+		return -EINVAL;
+
+	memcpy((void *)dest, (const void *)src, count);
+
+	return 0;
+}
+
+static inline int synaptics_rmi4_reg_read(
+		struct synaptics_rmi4_data *rmi4_data,
+		unsigned short addr,
+		unsigned char *data,
+		unsigned short len)
+{
+	return rmi4_data->i2c_read(rmi4_data, addr, data, len);
+}
+
+static inline int synaptics_rmi4_reg_write(
+		struct synaptics_rmi4_data *rmi4_data,
+		unsigned short addr,
+		unsigned char *data,
+		unsigned short len)
+{
+	return rmi4_data->i2c_write(rmi4_data, addr, data, len);
+}
+
+extern int FPS_register_notifier(struct notifier_block *nb,
+				unsigned long stype, bool report);
+extern int FPS_unregister_notifier(struct notifier_block *nb,
+				unsigned long stype);
 
 #if defined(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_TEST_REPORTING)
 int synaptics_rmi4_scan_f54_ctrl_reg_info(
