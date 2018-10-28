@@ -825,7 +825,7 @@ static const struct mpm_of mpm_of_map[MSM_MPM_NR_IRQ_DOMAINS] = {
 #elif defined(CONFIG_GPIO_MSM_V3)
 		&msm_gpio_irq_extn,
 #else
-		&mpm_pinctrl_extn,
+		NULL,
 #endif
 		mpm_irq_domain_size,
 	},

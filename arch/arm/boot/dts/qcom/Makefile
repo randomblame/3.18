@@ -131,6 +131,25 @@ dtb-$(CONFIG_ARCH_MSM8996) += msm8996-v2-pmi8994-cdp.dtb \
 	apq8096-v3-pmi8996-mdm9x55-slimbus-mtp.dtb \
 	apq8096-v3-pmi8996-dragonboard.dtb
 
+dtb-$(CONFIG_ARCH_MSM8992) += msm8992-sim.dtb \
+	msm8992-rumi.dtb \
+	msm8992-cdp.dtb \
+	msm8992-mtp.dtb \
+	msm8992-pmi8994-pm8004-cdp.dtb \
+	msm8992-pmi8994-pm8004-mtp.dtb
+endif # CONFIG_MMI_DEVICE_DTBS
+
+# Motorola DTB definitions
+dtb-$(CONFIG_ARCH_MSM8994) += msm8994-bunkerhill-p201.dtb
+
+dtb-$(CONFIG_ARCH_MSM8992) += msm8992-clark-p0.dtb
+dtb-$(CONFIG_ARCH_MSM8992) += msm8992-clark-p1.dtb
+dtb-$(CONFIG_ARCH_MSM8992) += msm8992-clark-p1b.dtb
+dtb-$(CONFIG_ARCH_MSM8992) += msm8992-clark-p2a.dtb
+dtb-$(CONFIG_ARCH_MSM8992) += msm8992-clark-p2b.dtb
+dtb-$(CONFIG_ARCH_MSM8992) += msm8992-clark-p2d.dtb
+dtb-$(CONFIG_ARCH_MSM8992) += msm8992-clark-p3b.dtb
+
 dtb-$(CONFIG_MSM_GVM_QUIN) += vplatform-lfv-msm8996.dtb
 
 dtb-$(CONFIG_ARCH_MSMCOBALT) += msmcobalt-sim.dtb \
@@ -141,7 +160,7 @@ dtb-$(CONFIG_ARCH_MSMCOBALT) += msmcobalt-sim.dtb \
 	msmcobalt-v2-rumi.dtb \
 	msmcobalt-v2-mtp.dtb \
 	msmcobalt-v2-cdp.dtb
-endif # CONFIG_MMI_DEVICE_DTBS
+
 
 # Motorola Device Trees
 dtb-$(CONFIG_ARCH_MSM8996) += msm8996-princeton-p1.dtb
