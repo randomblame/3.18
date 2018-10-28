@@ -217,6 +217,22 @@ config BACKLIGHT_LM3533
 	  the ambient-light-sensor interface. The chip supports 256 brightness
 	  levels.
 
+config BACKLIGHT_LM3631
+	tristate "Backlight driver for TI LM3631"
+	depends on BACKLIGHT_CLASS_DEVICE && MFD_TI_LMU
+	select TI_LMU_BACKLIGHT
+	help
+	  Say Y to enable the backlight driver for TI LM3631.
+	  Up to 2 backlight strings and 11 bit dimming is supported.
+	  PWM brightness control is also supported.
+
+config TI_LMU_BACKLIGHT
+	tristate "Backlight driver for TI LMU"
+	depends on BACKLIGHT_LM3532 || BACKLIGHT_LM3631 || BACKLIGHT_LM3633 || BACKLIGHT_LM3695 || BACKLIGHT_LM3697
+	help
+	  TI LMU backlight driver provides common driver features.
+	  Chip specific configuration is handled by each backlight driver.
+
 config BACKLIGHT_LOCOMO
 	tristate "Sharp LOCOMO LCD/Backlight Driver"
 	depends on SHARP_LOCOMO
