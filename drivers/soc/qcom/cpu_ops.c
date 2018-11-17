@@ -341,4 +341,5 @@ static const struct cpu_operations msm8994_cortex_a_ops = {
 #endif
 	.cpu_suspend       = msm_pm_collapse,
 };
-CPU_METHOD_OF_DECLARE(msm8994_cortex_a_ops, &msm8994_cortex_a_ops);
+CPU_METHOD_OF_DECLARE(msm8994_cortex_a_ops,
+	"qcom,8994-arm-cortex-acc", &msm8994_cortex_a_ops);

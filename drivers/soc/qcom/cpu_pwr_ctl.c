@@ -40,6 +40,15 @@
 #define L2_PWR_CTL			0x14
 #define L2_PWR_STATUS			0x18
 #define L2_CORE_CBCR			0x58
+#define L1_RST_DIS		0x284
+
+#define L2_SPM_STS		0xc
+#define L2_VREG_CTL		0x1c
+
+#define APC_LDO_CFG1		0xc
+#define APC_LDO_CFG2		0x10
+#define APC_LDO_VREF_CFG	0x4
+#define APC_LDO_BHS_PWR_CTL	0x28
 
 /*
  * struct msm_l2ccc_of_info: represents of data for l2 cache clock controller.
@@ -297,7 +306,8 @@ static int kick_l2spm_8994(struct device_node *l2ccc_node,
 
 		BUG_ON(!timeout--);
 		cpu_relax();
-		usleep(100);
+		//usleep(100);
+		udelay(100);
 	}
 
 bail_l2_pwr_bit:
@@ -511,7 +521,8 @@ int msm8994_cpu_ldo_config(unsigned int cpu)
 	 * start after the reg write is complete. Make sure that the reg
 	 * write is complete using a memory barrier */
 	mb();
-	usleep(1);
+	//usleep(1);
+	udelay(100);
 	writel_relaxed(0x0, ldo_bhs_reg_base);
 	/* Use a memory barrier to make sure the reg write is complete before
 	 * the node is unmapped. */
