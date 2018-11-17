@@ -1081,7 +1081,7 @@
 		qcom,wlan-rc-num = <0>;
 		qcom,wlan-ramdump-dynamic = <0x200000>;
 	};
-
+#if 0
 	ipa_hw: qcom,ipa@fd4c0000 {
 		compatible = "qcom,ipa";
 		reg = <0xfd4c0000 0x29000>,
@@ -1112,7 +1112,7 @@
 		qcom,rmnet-ipa-ssr;
 		qcom,ipa-loaduC;
 	};
-
+#endif
 	spi_0: spi@f9923000 {
 		compatible = "qcom,spi-qup-v2";
 		#address-cells = <1>;
