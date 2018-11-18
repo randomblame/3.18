@@ -26,6 +26,24 @@ void cpu_idle_poll_ctrl(bool enable)
 	}
 }
 
+static DEFINE_PER_CPU(int, idle_force_poll);
+
+void per_cpu_idle_poll_ctrl(int cpu, bool enable)
+{
+	if (enable) {
+		per_cpu(idle_force_poll, cpu)++;
+	} else {
+		per_cpu(idle_force_poll, cpu)--;
+		WARN_ON_ONCE(per_cpu(idle_force_poll, cpu) < 0);
+	}
+
+	/*
+	 * Make sure poll mode is entered on the relevant CPU after the flag is
+	 * set
+	 */
+	mb();
+}
+
 #ifdef CONFIG_GENERIC_IDLE_POLL_SETUP
 static int __init cpu_idle_poll_setup(char *__unused)
 {
@@ -273,5 +291,6 @@ void cpu_startup_entry(enum cpuhp_state state)
 	boot_init_stack_canary();
 #endif
 	arch_cpu_idle_prepare();
+	per_cpu(idle_force_poll, smp_processor_id()) = 0;
 	cpu_idle_loop();
 }
