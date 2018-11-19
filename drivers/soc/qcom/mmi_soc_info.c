@@ -16,15 +16,24 @@
 #include <soc/qcom/socinfo.h>
 #include <linux/pstore.h>
 
+struct mmi_biglittle {
+	int speed_bin;
+	int pvs_ver;
+};
+
 struct mmi_msm_bin {
 	int	set;
 	int	speed;
 	int	pvs;
 	int	ver;
+	struct mmi_biglittle little;
+	struct mmi_biglittle big;
 };
 
 #define MMI_MSM_BIN_INVAL	INT_MAX
 #define ACPU_BIN_SET		BIT(0)
+#define BIG_BIN_SET		BIT(1)
+#define LITTLE_BIN_SET		BIT(2)
 
 static struct mmi_msm_bin mmi_msm_bin_info;
 static DEFINE_SPINLOCK(mmi_msm_bin_lock);
@@ -83,6 +92,25 @@ static const struct file_operations mmi_acpu_proc_fops = {
 	.llseek = default_llseek,
 };
 
+void mmi_biglittle_bin_set(int bin, int pvs_ver, bool big)
+{
+	unsigned long flags;
+	int type = big ? BIG_BIN_SET : LITTLE_BIN_SET;
+	struct mmi_biglittle *info;
+
+	spin_lock_irqsave(&mmi_msm_bin_lock, flags);
+	if (mmi_msm_bin_info.set & type) {
+		spin_unlock_irqrestore(&mmi_msm_bin_lock, flags);
+		return;
+	}
+
+	info = big ? &mmi_msm_bin_info.big : &mmi_msm_bin_info.little;
+	info->speed_bin = bin;
+	info->pvs_ver = pvs_ver;
+	mmi_msm_bin_info.set |= type;
+	spin_unlock_irqrestore(&mmi_msm_bin_lock, flags);
+}
+
 void mmi_acpu_bin_set(int *speed, int *pvs, int *ver)
 {
 	unsigned long flags;
@@ -137,6 +165,42 @@ static void __init mmi_msm_acpu_bin_export(void)
 		mmi_panic_annotate(acpu);
 	}
 	mmi_panic_annotate("\n");
+}
+
+static void __init mmi_biglittle_bin_export(void)
+{
+	unsigned long flags;
+	char cpu[64];
+
+	spin_lock_irqsave(&mmi_msm_bin_lock, flags);
+	if (!(mmi_msm_bin_info.set & LITTLE_BIN_SET)) {
+		spin_unlock_irqrestore(&mmi_msm_bin_lock, flags);
+		pr_debug("Little Bin is not available.\n");
+		goto big;
+	}
+	spin_unlock_irqrestore(&mmi_msm_bin_lock, flags);
+
+	snprintf(cpu, sizeof(cpu),
+		"CPU Little: Speed bin %d PVS version %d\n",
+		mmi_msm_bin_info.little.speed_bin,
+		mmi_msm_bin_info.little.pvs_ver);
+	mmi_panic_annotate(cpu);
+
+
+big:
+	spin_lock_irqsave(&mmi_msm_bin_lock, flags);
+	if (!(mmi_msm_bin_info.set & BIG_BIN_SET)) {
+		spin_unlock_irqrestore(&mmi_msm_bin_lock, flags);
+		pr_debug("Big Bin is not available.\n");
+		return;
+	}
+	spin_unlock_irqrestore(&mmi_msm_bin_lock, flags);
+
+	snprintf(cpu, sizeof(cpu),
+		"CPU Big: Speed bin %d PVS version %d\n",
+		mmi_msm_bin_info.big.speed_bin,
+		mmi_msm_bin_info.big.pvs_ver);
+	mmi_panic_annotate(cpu);
 }
 
 static int __init init_mmi_soc_info(void)
