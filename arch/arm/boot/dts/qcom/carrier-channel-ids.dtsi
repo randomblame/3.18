@@ -1,5 +1,5 @@
 /* Copyright (c) 2013, The Linux Foundation. All rights reserved.
- * Copyright (c) 2016 Motorola Mobility LLC
+ * Copyright (c) 2014 Motorola Mobility LLC
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -52,11 +52,11 @@
 		"attmx",	/* 35 */
 		"womcl",	/* 36 */
 		"avaco",	/* 37 */
-		"retpe",	/* 38 */
-		"openla",	/* 39 */
-		"opencl",	/* 40 */
-		"openmx",	/* 41 */
-		"altmx",	/* 42 */
+		"undefined",	/* 38 */
+		"undefined",	/* 39 */
+		"undefined",	/* 40 */
+		"undefined",	/* 41 */
+		"undefined",	/* 42 */
 		"undefined",	/* 43 */
 		"undefined",	/* 44 */
 		"undefined",	/* 45 */
@@ -101,25 +101,25 @@
 		"vfes",	        /* 84 */
 		"vfeu",	        /* 85 */
 		"3gb",	        /* 86 */
-		"tescoie",	/* 87 */
-		"altfr",	/* 88 */
-		"3ie",	        /* 89 */
-		"altpt",	/* 90 */
-		"timit",	/* 91 */
-		"retma",	/* 92 */
-		"windit",	/* 93 */
-		"vfhu",	        /* 94 */
-		"vfro",	        /* 95 */
-		"telhu",	/* 96 */
-		"playpl",	/* 97 */
-		"oraeu",	/* 98 */
-		"dteu",		/* 99 */
-		"teleu",	/* 100 */
-		"pluspl",	/* 101 */
-		"dtpl",		/* 102 */
-		"tefes",	/* 103 */
-		"altice",	/* 104 */
-		"vipeu",	/* 105 */
+		"undefined",	/* 87 */
+		"undefined",	/* 88 */
+		"undefined",	/* 89 */
+		"undefined",	/* 90 */
+		"undefined",	/* 91 */
+		"undefined",	/* 92 */
+		"undefined",	/* 93 */
+		"undefined",	/* 94 */
+		"undefined",	/* 95 */
+		"undefined",	/* 96 */
+		"undefined",	/* 97 */
+		"undefined",	/* 98 */
+		"undefined",	/* 99 */
+		"undefined",	/* 100 */
+		"undefined",	/* 101 */
+		"undefined",	/* 102 */
+		"undefined",	/* 103 */
+		"undefined",	/* 104 */
+		"undefined",	/* 105 */
 		"undefined",	/* 106 */
 		"undefined",	/* 107 */
 		"undefined",	/* 108 */
@@ -151,20 +151,20 @@
 		"sprint",	/* 134 */
 		"repw",		/* 135 */
 		"aio",		/* 136 */
-		"cricket",	/* 137 */
+		"???",		/* 137 */
 		"cc",		/* 138 */
 		"usc",		/* 139 */
 		"tracfone",	/* 140 */
 		"retus",	/* 141 */
-		"metropcs",	/* 142 */
+		"???",		/* 142 */
 		"rcica",	/* 143 */
 		"wndca",	/* 144 */
 		"dmc",		/* 145 */
-		"bby",		/* 146 */
-		"amz",		/* 147 */
-		"acg",		/* 148 */
-		"lra",		/* 149 */
-		"comcast",	/* 150 */
+		"bby",  	/* 146 */
+		"undefined",	/* 147 */
+		"undefined",	/* 148 */
+		"undefined",	/* 149 */
+		"undefined",	/* 150 */
 		"undefined",	/* 151 */
 		"undefined",	/* 152 */
 		"undefined",	/* 153 */
@@ -209,22 +209,22 @@
 		"retin",	/* 192 - Asia & Oceania */
 		"retcn",	/* 193 */
 		"telstra",	/* 194 */
-		"vfau",		/* 195 */
-		"amzin",	/* 196 */
-		"jioin",	/* 197 */
-		"airin",	/* 198 */
-		"retid",	/* 199 */
-		"cmcc",		/* 200 */
-		"ctcn",		/* 201 */
-		"cucn",		/* 202 */
-		"retmm",	/* 203 */
-		"gt4gtw",	/* 204 */
-		"retth",	/* 205 */
-		"retru",	/* 206 */
-		"trueth",	/* 207 */
-		"smarthk",	/* 208 */
-		"mobilpk",	/* 209 */
-		"retsea",	/* 210 */
+		"vfau",	/* 195 */
+		"undefined",	/* 196 */
+		"undefined",	/* 197 */
+		"undefined",	/* 198 */
+		"undefined",	/* 199 */
+		"undefined",	/* 200 */
+		"undefined",	/* 201 */
+		"undefined",	/* 202 */
+		"undefined",	/* 203 */
+		"undefined",	/* 204 */
+		"undefined",	/* 205 */
+		"undefined",	/* 206 */
+		"undefined",	/* 207 */
+		"undefined",	/* 208 */
+		"undefined",	/* 209 */
+		"undefined",	/* 210 */
 		"undefined",	/* 211 */
 		"undefined",	/* 212 */
 		"undefined",	/* 213 */

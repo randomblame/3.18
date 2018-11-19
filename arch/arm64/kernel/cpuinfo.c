@@ -157,6 +157,14 @@ static int c_show(struct seq_file *m, void *v)
 		seq_printf(m, "CPU revision\t: %d\n\n", MIDR_REVISION(midr));
 	}
 
+#ifdef CONFIG_ARMV7_COMPAT_CPUINFO
+	if (is_compat_task()) {
+		/* Print out the non-optional ARMv8 HW capabilities */
+		seq_printf(m, "wp half thumb fastmult vfp edsp neon vfpv3 tlsi ");
+		seq_printf(m, "vfpv4 idiva idivt ");
+	}
+#endif
+
 	if (!arch_read_hardware_id)
 		seq_printf(m, "Hardware\t: %s\n", machine_name);
 	else
