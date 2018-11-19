@@ -34,9 +34,24 @@
  *	- vma   - vma_struct describing address range
  */
 ENTRY(__cpu_flush_user_tlb_range)
+#ifdef CONFIG_ARCH_MSM8994_V1_TLBI_WA
 	tlbi    vmalle1is
 	dsb	sy
 	isb
+#else
+	vma_vm_mm x3, x2			// get vma->vm_mm
+	mmid	w3, x3				// get vm_mm->context.id
+	dsb	sy
+	lsr	x0, x0, #12			// align address
+	lsr	x1, x1, #12
+	bfi	x0, x3, #48, #16		// start VA and ASID
+	bfi	x1, x3, #48, #16		// end VA and ASID
+1:	tlbi	vae1is, x0			// TLB invalidate by address and ASID
+	add	x0, x0, #1
+	cmp	x0, x1
+	b.lo	1b
+	dsb	sy
+#endif
 	ret
 ENDPROC(__cpu_flush_user_tlb_range)
 
@@ -49,7 +64,17 @@ ENDPROC(__cpu_flush_user_tlb_range)
  *	- end   - end address (exclusive, may not be aligned)
  */
 ENTRY(__cpu_flush_kern_tlb_range)
+#ifdef CONFIG_ARCH_MSM8994_V1_TLBI_WA
 	tlbi    vmalle1is
+#else
+	dsb	sy
+	lsr	x0, x0, #12			// align address
+	lsr	x1, x1, #12
+1:	tlbi	vaae1is, x0			// TLB invalidate by address
+	add	x0, x0, #1
+	cmp	x0, x1
+	b.lo	1b
+#endif
 	dsb	sy
 	isb
 	ret
