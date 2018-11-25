@@ -1,6 +1,8 @@
-dts-dirs += apm
-dts-dirs += arm
-dts-dirs += cavium
-dts-dirs += qcom
+targets += dtbs
 
-subdir-y	:= $(dts-dirs)
+#used for cleaning - not building
+subdir- := qcom
+
+dtbs: $(addprefix $(obj)/, $(DTB_LIST))
+
+clean-files := dts/*.dtb *.dtb
