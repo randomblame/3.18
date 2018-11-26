@@ -912,7 +912,7 @@ static int check_fmt(struct file *file, enum v4l2_buf_type type)
 {
 	struct video_device *vfd = video_devdata(file);
 	const struct v4l2_ioctl_ops *ops = vfd->ioctl_ops;
-	bool is_vid = (vfd->vfl_type == VFL_TYPE_GRABBER || vfd->vfl_type == VFL_TYPE_MOT_GRABBER);
+	bool is_vid = vfd->vfl_type == VFL_TYPE_GRABBER;
 	bool is_vbi = vfd->vfl_type == VFL_TYPE_VBI;
 	bool is_sdr = vfd->vfl_type == VFL_TYPE_SDR;
 	bool is_rx = vfd->vfl_dir != VFL_DIR_TX;
@@ -966,10 +966,6 @@ static int check_fmt(struct file *file, enum v4l2_buf_type type)
 		break;
 	case V4L2_BUF_TYPE_SDR_CAPTURE:
 		if (is_sdr && is_rx && ops->vidioc_g_fmt_sdr_cap)
-			return 0;
-		break;
-	case V4L2_BUF_TYPE_PRIVATE:
-		if (ops->vidioc_g_fmt_type_private)
 			return 0;
 		break;
 	default:
@@ -1103,7 +1099,7 @@ static int v4l_enum_fmt(const struct v4l2_ioctl_ops *ops,
 {
 	struct v4l2_fmtdesc *p = arg;
 	struct video_device *vfd = video_devdata(file);
-	bool is_vid = (vfd->vfl_type == VFL_TYPE_GRABBER || vfd->vfl_type == VFL_TYPE_MOT_GRABBER);
+	bool is_vid = vfd->vfl_type == VFL_TYPE_GRABBER;
 	bool is_sdr = vfd->vfl_type == VFL_TYPE_SDR;
 	bool is_rx = vfd->vfl_dir != VFL_DIR_TX;
 	bool is_tx = vfd->vfl_dir != VFL_DIR_RX;
@@ -1142,7 +1138,7 @@ static int v4l_g_fmt(const struct v4l2_ioctl_ops *ops,
 {
 	struct v4l2_format *p = arg;
 	struct video_device *vfd = video_devdata(file);
-	bool is_vid = (vfd->vfl_type == VFL_TYPE_GRABBER || vfd->vfl_type == VFL_TYPE_MOT_GRABBER);
+	bool is_vid = vfd->vfl_type == VFL_TYPE_GRABBER;
 	bool is_sdr = vfd->vfl_type == VFL_TYPE_SDR;
 	bool is_rx = vfd->vfl_dir != VFL_DIR_TX;
 	bool is_tx = vfd->vfl_dir != VFL_DIR_RX;
@@ -1234,7 +1230,7 @@ static int v4l_s_fmt(const struct v4l2_ioctl_ops *ops,
 {
 	struct v4l2_format *p = arg;
 	struct video_device *vfd = video_devdata(file);
-	bool is_vid = (vfd->vfl_type == VFL_TYPE_GRABBER || vfd->vfl_type == VFL_TYPE_MOT_GRABBER);
+	bool is_vid = vfd->vfl_type == VFL_TYPE_GRABBER;
 	bool is_sdr = vfd->vfl_type == VFL_TYPE_SDR;
 	bool is_rx = vfd->vfl_dir != VFL_DIR_TX;
 	bool is_tx = vfd->vfl_dir != VFL_DIR_RX;
@@ -1313,7 +1309,7 @@ static int v4l_try_fmt(const struct v4l2_ioctl_ops *ops,
 {
 	struct v4l2_format *p = arg;
 	struct video_device *vfd = video_devdata(file);
-	bool is_vid = (vfd->vfl_type == VFL_TYPE_GRABBER || vfd->vfl_type == VFL_TYPE_MOT_GRABBER);
+	bool is_vid = vfd->vfl_type == VFL_TYPE_GRABBER;
 	bool is_sdr = vfd->vfl_type == VFL_TYPE_SDR;
 	bool is_rx = vfd->vfl_dir != VFL_DIR_TX;
 	bool is_tx = vfd->vfl_dir != VFL_DIR_RX;
@@ -2543,8 +2539,11 @@ video_usercopy(struct file *file, unsigned int cmd, unsigned long arg,
 
 	/* Handles IOCTL */
 	err = func(file, cmd, parg);
-	if (err == -ENOIOCTLCMD)
+	if (err == -ENOTTY || err == -ENOIOCTLCMD) {
 		err = -ENOTTY;
+		goto out;
+	}
+
 	if (err == 0) {
 		if (cmd == VIDIOC_DQBUF)
 			trace_v4l2_dqbuf(video_devdata(file)->minor, parg);
