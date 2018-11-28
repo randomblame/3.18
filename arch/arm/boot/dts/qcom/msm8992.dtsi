@@ -303,7 +303,7 @@
 	};
 
 	msmgpio: gpio@fd510000 {
-		compatible = "qcom,msm-gpio";
+		compatible = "qcom,msm8994-pinctrl";
 		gpio-controller;
 		#gpio-cells = <2>;
 		interrupt-controller;

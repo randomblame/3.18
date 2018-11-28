@@ -1,6 +1,7 @@
 config COMMON_CLK_QCOM
 	tristate "Support for Qualcomm's clock controllers"
-	depends on OF
+	default "y"
+	select OF
 	select REGMAP_MMIO
 	select RESET_CONTROLLER
 
@@ -73,7 +74,8 @@ config MSM_MMCC_8974
 
 config MSM_GCC_8994
 	tristate "MSM8994 Global Clock Controller"
-	depends on COMMON_CLK_QCOM
+	select COMMON_CLK_QCOM
+	default "y"
 	help
 	  Support for the global clock controller on msm8994 devices.
 	  Say Y if you want to use peripheral devices such as UART, SPI,
