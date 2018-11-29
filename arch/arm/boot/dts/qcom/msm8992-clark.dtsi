@@ -14,7 +14,7 @@
 
 / {
 	model = "clark";
-	compatible = "qcom,msm8992-clark", "qcom,msm8992-moto", "qcom,msm8994", "qcom,msm8992";
+	compatible = "qcom,msm8992-clark", "qcom,msm8992-moto", "qcom,msm8994";
 };
 
 &pm8994_l22 {

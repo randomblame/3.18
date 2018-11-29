@@ -379,7 +379,6 @@ config MSM8994_V1_PMUIRQ_WA
 
 config ARCH_MSM8992
 	bool "Enable Support for Qualcomm MSM8992"
-	select PINCTRL_MSM_TLMM
 	depends on ARCH_MSM
 	help
 	  Enable kernel support for the MSM8992 chipset. If you don't
