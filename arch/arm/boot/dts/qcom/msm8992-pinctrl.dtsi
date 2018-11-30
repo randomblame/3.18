@@ -25,7 +25,7 @@
 			#qcom,pin-cells = <1>;
 
 			msm_gpio: msm_gpio {
-				compatible = "qcom,msm8992-pinctrl";
+				compatible = "qcom,msm-tlmm-8994";
 				gpio-controller;
 				#gpio-cells = <2>;
 				interrupt-controller;
