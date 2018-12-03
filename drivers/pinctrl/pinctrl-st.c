@@ -930,6 +930,11 @@ static int st_pmx_set_mux(struct pinctrl_dev *pctldev, unsigned fselector,
 	return 0;
 }
 
+static void st_pmx_disable(struct pinctrl_dev *pctldev, unsigned selector,
+		unsigned group)
+{
+}
+
 static int st_pmx_set_gpio_direction(struct pinctrl_dev *pctldev,
 			struct pinctrl_gpio_range *range, unsigned gpio,
 			bool input)
@@ -951,7 +956,12 @@ static struct pinmux_ops st_pmxops = {
 	.get_functions_count	= st_pmx_get_funcs_count,
 	.get_function_name	= st_pmx_get_fname,
 	.get_function_groups	= st_pmx_get_groups,
+<<<<<<< HEAD
 	.set_mux		= st_pmx_set_mux,
+=======
+	.enable			= st_pmx_enable,
+	.disable		= st_pmx_disable,
+>>>>>>> parent of 2243a87d90b4... pinctrl: avoid duplicated calling enable_pinmux_setting for a pin
 	.gpio_set_direction	= st_pmx_set_gpio_direction,
 };
 

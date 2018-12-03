@@ -761,6 +761,26 @@ static int at91_pmx_set(struct pinctrl_dev *pctldev, unsigned selector,
 	return 0;
 }
 
+static void at91_pmx_disable(struct pinctrl_dev *pctldev, unsigned selector,
+			   unsigned group)
+{
+	struct at91_pinctrl *info = pinctrl_dev_get_drvdata(pctldev);
+	const struct at91_pmx_pin *pins_conf = info->groups[group].pins_conf;
+	const struct at91_pmx_pin *pin;
+	uint32_t npins = info->groups[group].npins;
+	int i;
+	unsigned mask;
+	void __iomem *pio;
+
+	for (i = 0; i < npins; i++) {
+		pin = &pins_conf[i];
+		at91_pin_dbg(info->dev, pin);
+		pio = pin_to_controller(info, pin->bank);
+		mask = pin_to_mask(pin->pin);
+		at91_mux_gpio_enable(pio, mask, 1);
+	}
+}
+
 static int at91_pmx_get_funcs_count(struct pinctrl_dev *pctldev)
 {
 	struct at91_pinctrl *info = pinctrl_dev_get_drvdata(pctldev);
@@ -834,7 +854,12 @@ static const struct pinmux_ops at91_pmx_ops = {
 	.get_functions_count	= at91_pmx_get_funcs_count,
 	.get_function_name	= at91_pmx_get_func_name,
 	.get_function_groups	= at91_pmx_get_groups,
+<<<<<<< HEAD
 	.set_mux		= at91_pmx_set,
+=======
+	.enable			= at91_pmx_enable,
+	.disable		= at91_pmx_disable,
+>>>>>>> parent of 2243a87d90b4... pinctrl: avoid duplicated calling enable_pinmux_setting for a pin
 	.gpio_request_enable	= at91_gpio_request_enable,
 	.gpio_disable_free	= at91_gpio_disable_free,
 };

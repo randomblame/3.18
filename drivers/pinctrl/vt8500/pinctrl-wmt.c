@@ -141,6 +141,17 @@ static int wmt_pmx_set_mux(struct pinctrl_dev *pctldev,
 	return wmt_set_pinmux(data, func_selector, pinnum);
 }
 
+static void wmt_pmx_disable(struct pinctrl_dev *pctldev,
+			    unsigned func_selector,
+			    unsigned group_selector)
+{
+	struct wmt_pinctrl_data *data = pinctrl_dev_get_drvdata(pctldev);
+	u32 pinnum = data->pins[group_selector].number;
+
+	/* disable by setting GPIO_IN */
+	wmt_set_pinmux(data, WMT_FSEL_GPIO_IN, pinnum);
+}
+
 static void wmt_pmx_gpio_disable_free(struct pinctrl_dev *pctldev,
 				      struct pinctrl_gpio_range *range,
 				      unsigned offset)
@@ -168,7 +179,12 @@ static struct pinmux_ops wmt_pinmux_ops = {
 	.get_functions_count = wmt_pmx_get_functions_count,
 	.get_function_name = wmt_pmx_get_function_name,
 	.get_function_groups = wmt_pmx_get_function_groups,
+<<<<<<< HEAD
 	.set_mux = wmt_pmx_set_mux,
+=======
+	.enable = wmt_pmx_enable,
+	.disable = wmt_pmx_disable,
+>>>>>>> parent of 2243a87d90b4... pinctrl: avoid duplicated calling enable_pinmux_setting for a pin
 	.gpio_disable_free = wmt_pmx_gpio_disable_free,
 	.gpio_set_direction = wmt_pmx_gpio_set_direction,
 };

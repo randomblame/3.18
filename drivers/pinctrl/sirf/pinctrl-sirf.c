@@ -191,6 +191,15 @@ static int sirfsoc_pinmux_set_mux(struct pinctrl_dev *pmxdev,
 	return 0;
 }
 
+static void sirfsoc_pinmux_disable(struct pinctrl_dev *pmxdev, unsigned selector,
+	unsigned group)
+{
+	struct sirfsoc_pmx *spmx;
+
+	spmx = pinctrl_dev_get_drvdata(pmxdev);
+	sirfsoc_pinmux_endisable(spmx, selector, false);
+}
+
 static int sirfsoc_pinmux_get_funcs_count(struct pinctrl_dev *pmxdev)
 {
 	return sirfsoc_pmxfunc_cnt;
@@ -238,7 +247,12 @@ static int sirfsoc_pinmux_request_gpio(struct pinctrl_dev *pmxdev,
 }
 
 static struct pinmux_ops sirfsoc_pinmux_ops = {
+<<<<<<< HEAD
 	.set_mux = sirfsoc_pinmux_set_mux,
+=======
+	.enable = sirfsoc_pinmux_enable,
+	.disable = sirfsoc_pinmux_disable,
+>>>>>>> parent of 2243a87d90b4... pinctrl: avoid duplicated calling enable_pinmux_setting for a pin
 	.get_functions_count = sirfsoc_pinmux_get_funcs_count,
 	.get_function_name = sirfsoc_pinmux_get_func_name,
 	.get_function_groups = sirfsoc_pinmux_get_groups,
